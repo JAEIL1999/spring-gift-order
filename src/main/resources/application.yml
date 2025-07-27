@@ -1,4 +1,4 @@
 kakao:
-  client_id: 287d51e6744e5453770637758648a131
-  redirect_uri: http://localhost:8080
-  KAUTH_TOKEN_URL_HOST: "https://kauth.kakao.com"
+  client_id: ${KAKAO_CLIENT_ID}
+  redirect_uri: ${KAKAO_REDIRECT_URI}
+  KAUTH_TOKEN_URL_HOST: ${KAKAO_AUTH_TOKEN_URL_HOST}
