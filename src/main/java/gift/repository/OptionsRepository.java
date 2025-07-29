@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface OptionsRepository extends JpaRepository<Options, Long> {
     List<Options> findByProductId(Long productId);
+    void deleteAllByProductId(Long productId);
 }

@@ -1,6 +1,11 @@
 package gift.dto.product;
 
+import gift.model.Options;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class ProductRequestDto {
@@ -19,8 +24,10 @@ public class ProductRequestDto {
 
     private String imageUrl;
 
-    private String optionName;
-    private int optionQuantity;
+    @Valid
+    @NotEmpty(message = "최소 하나의 옵션이 필요합니다.")
+    @Size(max = 10, message = "옵션은 최대 10개까지 등록 가능합니다.")
+    private List<Options> options = new ArrayList<>();
 
     @AssertTrue(message = "'카카오'가 포함된 상품명은 담당 MD와 협의가 필요합니다.")
     private boolean isKakaoPolicyCompliant() {
@@ -38,8 +45,10 @@ public class ProductRequestDto {
     public String getName() {return name;}
     public  void setName(String name) {this.name = name;}
     public int getPrice() {return price;}
+    public  void setPrice(int price) {this.price = price;}
     public String getImageUrl() {return imageUrl;}
+    public  void setImageUrl(String imageUrl) {this.imageUrl = imageUrl;}
     public boolean getUsableKakao() {return usableKakao;}
-    public String getOptionName() {return optionName;}
-    public int getOptionQuantity() {return optionQuantity;}
+    public List<Options> getOptions() { return options; }
+    public void setOptions(List<Options> options) { this.options = options; }
 }

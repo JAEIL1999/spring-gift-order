@@ -1,6 +1,7 @@
 package gift.controller;
 
 import gift.dto.product.ProductRequestDto;
+import gift.mapper.ProductMapper;
 import gift.model.Product;
 import gift.service.ProductService;
 import jakarta.validation.Valid;
@@ -16,14 +17,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 
+
 @Controller
 @RequestMapping("/admin/products")
 public class ProductController {
 
     private final ProductService service;
-
-    public ProductController(ProductService service){
+    private final ProductMapper ProductMapper;
+    public ProductController(ProductService service, ProductMapper ProductMapper){
         this.service = service;
+        this.ProductMapper = ProductMapper;
     }
 
     @GetMapping // 전체 상품 조회 API
@@ -57,13 +60,20 @@ public class ProductController {
     @GetMapping("/{id}/edit")
     public String editProduct(@PathVariable Long id, Model model) {
         Product product = service.findProduct(id);
-        model.addAttribute("productRequestDto", product);
+        ProductRequestDto productRequestDto = ProductMapper.toDto(product);
+        model.addAttribute("productRequestDto", productRequestDto);
         model.addAttribute("editMode", true);
         return "/admin/product_form";
     }
 
     @PostMapping("/{id}")
-    public String updateProduct(@Valid @ModelAttribute ProductRequestDto productRequestDto) {
+    public String updateProduct(@Valid @ModelAttribute ProductRequestDto productRequestDto,
+                                BindingResult bindingResult,
+                                Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("editMode", true);
+            return "admin/product_form";
+        }
         service.updateProduct(productRequestDto);
         return "redirect:/admin/products";
     }

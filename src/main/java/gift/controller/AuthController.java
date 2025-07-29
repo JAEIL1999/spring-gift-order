@@ -1,6 +1,8 @@
 package gift.controller;
 
 import gift.service.KakaoService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,9 +32,11 @@ public class AuthController {
 
     @GetMapping
     public ResponseEntity<?> kakaoLogin(
-            @RequestParam("code") String accessCode) {
+            @RequestParam("code") String accessCode, HttpServletRequest request) {
         // 받은 토큰은 추후에 사용을 위해 남겨둠
         String accessToken = kakaoService.getKakaoToken(accessCode);
-        return new ResponseEntity<>(HttpStatus.OK);
+        HttpSession session = request.getSession(true);
+        session.setAttribute("kakaoAccessToken", accessToken);
+        return new ResponseEntity<>("로그인 성공", HttpStatus.OK);
     }
 }

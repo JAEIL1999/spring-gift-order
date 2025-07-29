@@ -1,5 +1,6 @@
 package gift.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class Product {
     private boolean usableKakao;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Options> options = new ArrayList<>();
 
     protected Product() {}
@@ -56,7 +58,8 @@ public class Product {
     public boolean isUsableKakao() {return usableKakao;}
     public String getImageUrl() {return imageUrl;}
     public void setImageUrl(String imageUrl) {this.imageUrl = imageUrl;}
-
+    public List<Options> getOptions() {return options;}
+    public void setOptions(List<Options> options) {this.options = options;}
     public void addOption(Options option) {
         this.options.add(option);
         option.setProduct(this);
