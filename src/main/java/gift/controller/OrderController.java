@@ -2,7 +2,7 @@ package gift.controller;
 
 import gift.dto.order.OrderRequestDto;
 import gift.dto.order.OrderResponseDto;
-import gift.repository.OptionsRepository;
+import gift.service.KakaoService;
 import gift.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/orders")
 public class OrderController {
-    private final OptionsRepository optionsRepository;
     private final OrderService orderService;
-    public OrderController(OptionsRepository optionsRepository, OrderService orderService) {
-        this.optionsRepository = optionsRepository;
+    private final KakaoService kakaoService;
+    public OrderController(OrderService orderService, KakaoService kakaoService) {
         this.orderService = orderService;
+        this.kakaoService = kakaoService;
     }
     @PostMapping
     public ResponseEntity<?> newOrder(@RequestBody OrderRequestDto orderRequestDto, HttpSession session) {
@@ -28,8 +28,8 @@ public class OrderController {
             return new ResponseEntity<>("로그인이 필요합니다.", HttpStatus.UNAUTHORIZED);
         }
 
-        OrderResponseDto order = orderService.Order(orderRequestDto);
-        String response = orderService.SendKakaoMessage(accessToken);
+        OrderResponseDto order = orderService.order(orderRequestDto);
+        String response = kakaoService.SendKakaoMessage(accessToken);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
