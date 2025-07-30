@@ -12,7 +12,7 @@ public class KakaoService {
     }
 
     public String getKakaoToken(String code) {
-        return kakaoClient.getAccessToken();
+        return kakaoClient.getAccessToken(code);
     }
 
     public String SendKakaoMessage(String access_token) {

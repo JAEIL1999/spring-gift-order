@@ -24,8 +24,9 @@ public class KakaoClient {
         this.redirectUri = redirectUri;
     }
 
-    public String getAccessToken(){
-        String body = "grant_type=authorization_code&client_id=" + clientId + "&redirect_uri=" + redirectUri;
+    public String getAccessToken(String code){
+        String body = "grant_type=authorization_code&client_id=" + clientId + "&redirect_uri=" + redirectUri + "&code=" + code;
+
         KakaoTokenResponseDto responseDto = authWebClient.post()
                 .uri("/oauth/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
