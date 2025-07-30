@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.ArrayList;
 
 
 @Controller
@@ -38,7 +39,8 @@ public class ProductController {
 
     @GetMapping("/new")
     public String createForm(Model model) {
-        model.addAttribute("productRequestDto",new ProductRequestDto());
+        model.addAttribute("productRequestDto",
+                new ProductRequestDto("example", 1000, "", false, new ArrayList<>()));
         model.addAttribute("editMode",false);
         return "admin/product_form";
     }
@@ -46,7 +48,7 @@ public class ProductController {
     @PostMapping
     public String createProduct(@Valid @ModelAttribute ProductRequestDto productDto, BindingResult bindingResult, Model  model) {
         if(bindingResult.hasErrors()) {
-            if (productDto.getName() != null && productDto.getName().contains("카카오") && !productDto.getUsableKakao()) {
+            if (productDto.name() != null && productDto.name().contains("카카오") && !productDto.usableKakao()) {
                 model.addAttribute("showKakaoPopup", true);
             }
             model.addAttribute("productRequestDto",productDto);
@@ -67,14 +69,14 @@ public class ProductController {
     }
 
     @PostMapping("/{id}")
-    public String updateProduct(@Valid @ModelAttribute ProductRequestDto productRequestDto,
+    public String updateProduct(@PathVariable Long id, @Valid @ModelAttribute ProductRequestDto productRequestDto,
                                 BindingResult bindingResult,
                                 Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("editMode", true);
             return "admin/product_form";
         }
-        service.updateProduct(productRequestDto);
+        service.updateProduct(id, productRequestDto);
         return "redirect:/admin/products";
     }
 
