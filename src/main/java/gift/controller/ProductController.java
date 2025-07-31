@@ -1,6 +1,7 @@
 package gift.controller;
 
 import gift.dto.product.ProductRequestDto;
+import gift.mapper.ProductMapper;
 import gift.model.Product;
 import gift.service.ProductService;
 import jakarta.validation.Valid;
@@ -15,15 +16,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.ArrayList;
+
 
 @Controller
 @RequestMapping("/admin/products")
 public class ProductController {
 
     private final ProductService service;
-
-    public ProductController(ProductService service){
+    private final ProductMapper ProductMapper;
+    public ProductController(ProductService service, ProductMapper ProductMapper){
         this.service = service;
+        this.ProductMapper = ProductMapper;
     }
 
     @GetMapping // 전체 상품 조회 API
@@ -35,7 +39,8 @@ public class ProductController {
 
     @GetMapping("/new")
     public String createForm(Model model) {
-        model.addAttribute("productRequestDto",new ProductRequestDto());
+        model.addAttribute("productRequestDto",
+                new ProductRequestDto("example", 1000, "", false, new ArrayList<>()));
         model.addAttribute("editMode",false);
         return "admin/product_form";
     }
@@ -43,7 +48,7 @@ public class ProductController {
     @PostMapping
     public String createProduct(@Valid @ModelAttribute ProductRequestDto productDto, BindingResult bindingResult, Model  model) {
         if(bindingResult.hasErrors()) {
-            if (productDto.getName() != null && productDto.getName().contains("카카오") && !productDto.getUsableKakao()) {
+            if (productDto.name() != null && productDto.name().contains("카카오") && !productDto.usableKakao()) {
                 model.addAttribute("showKakaoPopup", true);
             }
             model.addAttribute("productRequestDto",productDto);
@@ -57,14 +62,21 @@ public class ProductController {
     @GetMapping("/{id}/edit")
     public String editProduct(@PathVariable Long id, Model model) {
         Product product = service.findProduct(id);
-        model.addAttribute("productRequestDto", product);
+        ProductRequestDto productRequestDto = ProductMapper.toDto(product);
+        model.addAttribute("productRequestDto", productRequestDto);
         model.addAttribute("editMode", true);
         return "/admin/product_form";
     }
 
     @PostMapping("/{id}")
-    public String updateProduct(@Valid @ModelAttribute ProductRequestDto productRequestDto) {
-        service.updateProduct(productRequestDto);
+    public String updateProduct(@PathVariable Long id, @Valid @ModelAttribute ProductRequestDto productRequestDto,
+                                BindingResult bindingResult,
+                                Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("editMode", true);
+            return "admin/product_form";
+        }
+        service.updateProduct(id, productRequestDto);
         return "redirect:/admin/products";
     }
 
