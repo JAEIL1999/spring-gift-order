@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${editMode} ? '상품 수정' : '상품 추가'"></title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+
+        .form-content {
+            padding: 40px;
+        }
+
+        .error-banner {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+
+        .error-banner::before {
+            content: "⚠️";
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .success-banner {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+
+        .success-banner::before {
+            content: "✅";
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .form-section {
+            margin-bottom: 35px;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 25px;
+            background-color: #fafbfc;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #495057;
+            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: "📦";
+            margin-right: 10px;
+            font-size: 22px;
+        }
+
+        .options-title::before {
+            content: "⚙️";
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"], input[type="number"], input[type="url"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            color: #856404;
+            font-weight: 500;
+        }
+
+        .field-error {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .field-error::before {
+            content: "❌";
+            margin-right: 5px;
+            font-size: 12px;
+        }
+
+        .option-container {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background-color: white;
+            overflow: hidden;
+        }
+
+        .option-item {
+            padding: 20px;
+            border-bottom: 1px solid #f1f3f4;
+            position: relative;
+            transition: background-color 0.2s ease;
+        }
+
+        .option-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .option-item:last-child {
+            border-bottom: none;
+        }
+
+        .option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .option-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .option-fields {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .remove-option-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 80px;
+            justify-content: center;
+        }
+
+        .remove-option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+        }
+
+        .remove-option-btn::before {
+            content: "🗑️";
+            font-size: 14px;
+        }
+
+        .add-option-section {
+            padding: 25px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .add-option-btn {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+
+        .add-option-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .add-option-btn::before {
+            content: "➕";
+            font-size: 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-secondary::before {
+            content: "←";
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .form-content {
+                padding: 20px;
+            }
+
+            .option-fields {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 th:text="${editMode} ? '상품 수정' : '상품 추가'"></h1>
+    </div>
+
+    <div class="form-content">
+        <!-- 수정 모드 -->
+        <form th:if="${editMode}" th:action="@{/admin/products/{id}(id=${productRequestDto.id})}" th:object="${productRequestDto}" method="post">
+
+            <!-- 에러 메시지 -->
+            <div th:if="${#fields.hasErrors()}" class="error-banner">
+                입력 값에 오류가 있습니다. 아래 내용을 확인해주세요.
+            </div>
+
+            <!-- 상품 기본 정보 -->
+            <div class="form-section">
+                <h3 class="section-title">상품 기본 정보</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-name">상품명</label>
+                        <input type="text" id="edit-name" th:field="*{name}" placeholder="상품명을 입력하세요"/>
+                        <div class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-price">가격 (원)</label>
+                        <input type="number" id="edit-price" th:field="*{price}" placeholder="0" min="0"/>
+                        <div class="field-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-imageUrl">이미지 URL</label>
+                    <input type="url" id="edit-imageUrl" th:field="*{imageUrl}" placeholder="https://example.com/image.jpg"/>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="edit-usableKakao" th:field="*{usableKakao}" />
+                    <label for="edit-usableKakao">"카카오" 이름 포함시: 담당 MD와 협의를 완료했습니다.</label>
+                </div>
+            </div>
+
+            <!-- 옵션 정보 -->
+            <div class="form-section">
+                <h3 class="section-title options-title">상품 옵션</h3>
+
+                <div class="option-container">
+                    <div class="field-error" th:if="${#fields.hasErrors('options')}" th:errors="*{options}" style="padding: 15px;"></div>
+
+                    <div th:each="option, optionStat : *{options}" class="option-item">
+                        <div class="option-header">
+                            <span class="option-number" th:text="|옵션 ${optionStat.index + 1}|"></span>
+                        </div>
+                        <div class="option-fields">
+                            <div class="form-group">
+                                <label th:for="|edit-option-name-${optionStat.index}|">옵션명</label>
+                                <input type="text" th:id="|edit-option-name-${optionStat.index}|"
+                                       th:field="*{options[__${optionStat.index}__].name}"
+                                       placeholder="예: 블루, 레드, 대형, 소형"/>
+                                <div class="field-error" th:if="${#fields.hasErrors('options[' + optionStat.index + '].name')}"
+                                     th:errors="*{options[__${optionStat.index}__].name}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label th:for="|edit-option-quantity-${optionStat.index}|">재고 수량</label>
+                                <input type="number" th:id="|edit-option-quantity-${optionStat.index}|"
+                                       th:field="*{options[__${optionStat.index}__].quantity}"
+                                       placeholder="0" min="1"/>
+                                <div class="field-error" th:if="${#fields.hasErrors('options[' + optionStat.index + '].quantity')}"
+                                     th:errors="*{options[__${optionStat.index}__].quantity}"></div>
+                            </div>
+
+                            <button type="button" class="remove-option-btn" th:if="${optionStat.size > 1}"
+                                    onclick="removeOption(this)">삭제</button>
+                        </div>
+                    </div>
+
+                    <div class="add-option-section">
+                        <button type="button" class="add-option-btn" onclick="addOption()">새 옵션 추가</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="btn-primary">수정 완료</button>
+                <a th:href="@{/admin/products}" class="btn-secondary">목록으로</a>
+            </div>
+        </form>
+
+        <!-- 추가 모드 -->
+        <form th:unless="${editMode}" th:action="@{/admin/products}" th:object="${productRequestDto}" method="post">
+
+            <!-- 에러 메시지 -->
+            <div th:if="${#fields.hasErrors()}" class="error-banner">
+                입력 값에 오류가 있습니다. 아래 내용을 확인해주세요.
+            </div>
+
+            <!-- 상품 기본 정보 -->
+            <div class="form-section">
+                <h3 class="section-title">상품 기본 정보</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="add-name">상품명</label>
+                        <input type="text" id="add-name" th:field="*{name}" placeholder="상품명을 입력하세요"/>
+                        <div class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="add-price">가격 (원)</label>
+                        <input type="number" id="add-price" th:field="*{price}" placeholder="0" min="0"/>
+                        <div class="field-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="add-imageUrl">이미지 URL</label>
+                    <input type="url" id="add-imageUrl" th:field="*{imageUrl}" placeholder="https://example.com/image.jpg"/>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="add-usableKakao" th:field="*{usableKakao}" />
+                    <label for="add-usableKakao">"카카오" 이름 포함시: 담당 MD와 협의를 완료했습니다.</label>
+                </div>
+            </div>
+
+            <!-- 옵션 정보 -->
+            <div class="form-section">
+                <h3 class="section-title options-title">상품 옵션</h3>
+
+                <div class="option-container">
+                    <div class="field-error" th:if="${#fields.hasErrors('options')}" th:errors="*{options}" style="padding: 15px;"></div>
+
+                    <div th:each="option, optionStat : *{options}" class="option-item">
+                        <div class="option-header">
+                            <span class="option-number" th:text="|옵션 ${optionStat.index + 1}|"></span>
+                        </div>
+                        <div class="option-fields">
+                            <div class="form-group">
+                                <label th:for="|add-option-name-${optionStat.index}|">옵션명</label>
+                                <input type="text" th:id="|add-option-name-${optionStat.index}|"
+                                       th:field="*{options[__${optionStat.index}__].name}"
+                                       placeholder="예: 블루, 레드, 대형, 소형"/>
+                                <div class="field-error" th:if="${#fields.hasErrors('options[' + optionStat.index + '].name')}"
+                                     th:errors="*{options[__${optionStat.index}__].name}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label th:for="|add-option-quantity-${optionStat.index}|">재고 수량</label>
+                                <input type="number" th:id="|add-option-quantity-${optionStat.index}|"
+                                       th:field="*{options[__${optionStat.index}__].quantity}"
+                                       placeholder="0" min="1"/>
+                                <div class="field-error" th:if="${#fields.hasErrors('options[' + optionStat.index + '].quantity')}"
+                                     th:errors="*{options[__${optionStat.index}__].quantity}"></div>
+                            </div>
+
+                            <button type="button" class="remove-option-btn" th:if="${optionStat.size > 1}"
+                                    onclick="removeOption(this)">삭제</button>
+                        </div>
+                    </div>
+
+                    <div class="add-option-section">
+                        <button type="button" class="add-option-btn" onclick="addOption()">새 옵션 추가</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="btn-primary">등록하기</button>
+                <a th:href="@{/admin/products}" class="btn-secondary">목록으로</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // 카카오 팝업 (기존)
+    /*[# th:if="${showKakaoPopup}"]*/
+    alert("'카카오'가 포함된 상품명은 담당 MD와 협의가 필요합니다.");
+    /*[/]*/
+
+    let optionIndex = /*[[${productRequestDto.options.size()}]]*/ 1;
+
+    function addOption() {
+        const optionContainer = document.querySelector('.option-container');
+        const addSection = optionContainer.querySelector('.add-option-section');
+
+        const newOptionItem = document.createElement('div');
+        newOptionItem.className = 'option-item';
+        newOptionItem.innerHTML = `
+            <div class="option-header">
+                <span class="option-number">옵션 ${optionIndex + 1}</span>
+            </div>
+            <div class="option-fields">
+                <div class="form-group">
+                    <label>옵션명</label>
+                    <input type="text" name="options[${optionIndex}].name" placeholder="예: 블루, 레드, 대형, 소형"/>
+                </div>
+                <div class="form-group">
+                    <label>재고 수량</label>
+                    <input type="number" name="options[${optionIndex}].quantity" placeholder="0" min="1"/>
+                </div>
+                <button type="button" class="remove-option-btn" onclick="removeOption(this)">삭제</button>
+            </div>
+        `;
+
+        optionContainer.insertBefore(newOptionItem, addSection);
+        optionIndex++;
+        updateOptionNumbers();
+    }
+
+    function removeOption(button) {
+        const optionItems = document.querySelectorAll('.option-item');
+        if (optionItems.length > 1) {
+            button.closest('.option-item').remove();
+            updateOptionNumbers();
+        }
+    }
+
+    function updateOptionNumbers() {
+        const optionItems = document.querySelectorAll('.option-item');
+        optionItems.forEach((item, index) => {
+            const numberSpan = item.querySelector('.option-number');
+            if (numberSpan) {
+                numberSpan.textContent = `옵션 ${index + 1}`;
+            }
+
+            // 동적으로 추가된 옵션들의 name 속성 업데이트
+            const nameInput = item.querySelector('input[type="text"]');
+            const quantityInput = item.querySelector('input[type="number"]');
+
+            if (nameInput && nameInput.name.startsWith('options[')) {
+                nameInput.name = `options[${index}].name`;
+            }
+            if (quantityInput && quantityInput.name.startsWith('options[')) {
+                quantityInput.name = `options[${index}].quantity`;
+            }
+        });
+    }
+</script>
+</body>
+</html>
